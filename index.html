@@ -75,7 +75,7 @@
     .section { padding: 24px 20px; }
     .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
     .section-title  { font-size: 16px; font-weight: 600; }
-    .section-link   { font-size: 13px; color: var(--gold); text-decoration: none; }
+    .section-link   { font-size: 13px; color: var(--gold); text-decoration: none; cursor: pointer; }
 
     /* ── Progress card ── */
     .progress-card {
@@ -85,7 +85,7 @@
     .progress-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
     .progress-sub   { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
     .progress-track { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
-    .progress-fill  { background: var(--gold); border-radius: 4px; height: 100%; }
+    .progress-fill  { background: var(--gold); border-radius: 4px; height: 100%; transition: width 0.4s ease; }
 
     /* ── Leaderboard ── */
     .lb-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
@@ -103,23 +103,12 @@
     .page-sub    { font-size: 13px; color: var(--dim); line-height: 1.5; }
 
     .camera-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background: #000;
-      overflow: hidden;
+      position: relative; width: 100%; aspect-ratio: 1 / 1;
+      background: #000; overflow: hidden;
     }
-
-    #qr-video {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* hidden canvas used only for jsQR frame capture */
+    #qr-video { width: 100%; height: 100%; object-fit: cover; display: block; }
     #qr-canvas { display: none; }
 
-    /* aiming guide overlay */
     .aim-overlay {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
@@ -127,61 +116,48 @@
     }
     .aim-box {
       width: 60%; aspect-ratio: 1 / 1;
-      border: 2px solid rgba(240, 192, 64, 0.8);
+      border: 2px solid rgba(240,192,64,0.8);
       border-radius: 12px;
       box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
     }
 
     .cam-status {
-      padding: 12px 20px;
-      font-size: 13px;
-      color: var(--dim);
-      text-align: center;
-      min-height: 40px;
+      padding: 12px 20px; font-size: 13px; color: var(--dim);
+      text-align: center; min-height: 40px;
     }
     .cam-status.error { color: var(--red); }
 
-    /* result card */
+    /* scan result */
     .scan-result {
-      margin: 0 20px 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
+      margin: 0 20px 20px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; text-align: center;
     }
     .scan-result.hidden { display: none; }
-
     .result-icon  { font-size: 32px; margin-bottom: 8px; }
     .result-label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
-    .result-value {
-      font-size: 15px; font-weight: 600; font-family: monospace;
-      color: var(--gold); word-break: break-all; margin-bottom: 16px;
-    }
+    .result-value { font-size: 15px; font-weight: 600; color: var(--gold); word-break: break-all; margin-bottom: 4px; }
+    .result-sub   { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
 
     /* manual entry */
     .manual-section { padding: 0 20px 24px; }
     .divider-label {
       font-size: 11px; color: var(--dim); text-align: center;
-      text-transform: uppercase; letter-spacing: 0.8px;
-      margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
       display: flex; align-items: center; gap: 10px;
     }
-    .divider-label::before,
-    .divider-label::after {
+    .divider-label::before, .divider-label::after {
       content: ''; flex: 1; height: 1px; background: var(--border);
     }
-
     .manual-row { display: flex; gap: 8px; }
 
     input[type="text"] {
       flex: 1; background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 12px 14px;
-      color: var(--text); font-size: 14px; font-family: monospace;
-      outline: none;
+      color: var(--text); font-size: 14px; font-family: monospace; outline: none;
     }
     input[type="text"]:focus { border-color: var(--gold); }
-    input[type="text"]::placeholder { color: var(--dim); }
+    input[type="text"]::placeholder { color: var(--dim); font-family: inherit; }
 
     .btn-primary {
       background: var(--gold); color: var(--bg);
@@ -196,13 +172,33 @@
       cursor: pointer; width: 100%;
     }
 
-    /* ── Placeholder views ── */
-    .placeholder {
-      padding: 60px 20px;
-      text-align: center;
-      color: var(--dim);
-      font-size: 14px;
+    /* ── Badges view ── */
+    .badge-list { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+
+    .badge-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+      display: flex; align-items: center; gap: 14px;
     }
+    .badge-card.locked { opacity: 0.45; }
+
+    .badge-icon {
+      font-size: 28px; width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg); border-radius: 10px; flex-shrink: 0;
+    }
+    .badge-icon.super { background: linear-gradient(135deg, #2a2010, #1a1020); border: 1px solid var(--gold); }
+
+    .badge-info { flex: 1; min-width: 0; }
+    .badge-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .badge-host  { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .badge-status { flex-shrink: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-status.earned { color: var(--green); }
+    .badge-status.locked { color: var(--dim); }
+
+    /* ── Full leaderboard view ── */
+    .board-list { padding: 0 20px 24px; }
 
     /* ── Bottom nav ── */
     .nav-spacer { height: 68px; }
@@ -230,26 +226,26 @@
 
   <header>
     <div class="logo">Hon<span>q</span></div>
-    <div class="avatar">M</div>
+    <div id="hdr-avatar" class="avatar">M</div>
   </header>
 
   <!-- ── Home view ── -->
   <div id="view-home" class="view active">
     <div class="hero">
       <div class="greeting">Welcome back</div>
-      <div class="handle">MagnoliaH</div>
+      <div id="home-handle" class="handle"></div>
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-label">Points</div>
-          <div class="stat-value gold">340</div>
+          <div id="home-points" class="stat-value gold"></div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Rank</div>
-          <div class="stat-value">#4</div>
+          <div id="home-rank" class="stat-value"></div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Badges</div>
-          <div class="stat-value green">2</div>
+          <div id="home-badges" class="stat-value green"></div>
         </div>
       </div>
     </div>
@@ -257,53 +253,27 @@
     <div class="section">
       <div class="section-header">
         <div class="section-title">In Progress</div>
-        <a class="section-link" href="#">See all</a>
+        <span class="section-link" onclick="switchView('badges')">See all</span>
       </div>
-      <div class="progress-card">
-        <div class="progress-title">Semester Formation</div>
-        <div class="progress-sub">1 of 2 tutorials complete</div>
-        <div class="progress-track">
-          <div class="progress-fill" style="width: 50%"></div>
-        </div>
-      </div>
+      <div id="home-progress-area"></div>
     </div>
 
     <div class="section" style="padding-top: 0">
       <div class="section-header">
         <div class="section-title">Leaderboard</div>
-        <a class="section-link" href="#">Full board</a>
+        <span class="section-link" onclick="switchView('board')">Full board</span>
       </div>
-      <div class="lb-row">
-        <div class="rank">1</div>
-        <div class="lb-name">AquilaR</div>
-        <div class="lb-score">520 pts</div>
-      </div>
-      <div class="lb-row">
-        <div class="rank">2</div>
-        <div class="lb-name">CrestW</div>
-        <div class="lb-score">480 pts</div>
-      </div>
-      <div class="lb-row">
-        <div class="rank">3</div>
-        <div class="lb-name">PinnacleJ</div>
-        <div class="lb-score">410 pts</div>
-      </div>
-      <div class="lb-row">
-        <div class="rank you">4</div>
-        <div class="lb-name you">MagnoliaH &nbsp;&#9664; you</div>
-        <div class="lb-score you">340 pts</div>
-      </div>
-      <div class="lb-row">
-        <div class="rank">5</div>
-        <div class="lb-name">VaultK</div>
-        <div class="lb-score">290 pts</div>
-      </div>
+      <div id="home-lb"></div>
     </div>
   </div>
 
-  <!-- ── Badges view (placeholder) ── -->
+  <!-- ── Badges view ── -->
   <div id="view-badges" class="view">
-    <div class="placeholder">Badge case coming in Step 5.</div>
+    <div class="page-header">
+      <div class="page-title">Your Badges</div>
+      <div class="page-sub">Honors College formation credentials.</div>
+    </div>
+    <div id="badge-list" class="badge-list"></div>
   </div>
 
   <!-- ── Scan view ── -->
@@ -316,17 +286,16 @@
     <div class="camera-wrap">
       <video id="qr-video" playsinline muted></video>
       <canvas id="qr-canvas"></canvas>
-      <div class="aim-overlay">
-        <div class="aim-box"></div>
-      </div>
+      <div class="aim-overlay"><div class="aim-box"></div></div>
     </div>
 
     <div id="cam-status" class="cam-status">Starting camera&hellip;</div>
 
     <div id="scan-result" class="scan-result hidden">
-      <div class="result-icon">&#10003;</div>
+      <div id="result-icon" class="result-icon"></div>
       <div class="result-label">Code detected</div>
       <div id="result-value" class="result-value"></div>
+      <div id="result-sub" class="result-sub"></div>
       <button id="scan-again" class="btn-secondary">Scan again</button>
     </div>
 
@@ -340,133 +309,351 @@
     </div>
   </div>
 
-  <!-- ── Board view (placeholder) ── -->
+  <!-- ── Full leaderboard view ── -->
   <div id="view-board" class="view">
-    <div class="placeholder">Full leaderboard coming in Step 6.</div>
+    <div class="page-header">
+      <div class="page-title">Leaderboard</div>
+      <div class="page-sub">Your cohort this semester.</div>
+    </div>
+    <div id="board-list" class="board-list"></div>
   </div>
 
   <div class="nav-spacer"></div>
 
   <nav>
     <div class="nav-item active" data-view="home">
-      <div class="nav-icon">&#8962;</div>
-      Home
+      <div class="nav-icon">&#8962;</div>Home
     </div>
     <div class="nav-item" data-view="badges">
-      <div class="nav-icon">&#9670;</div>
-      Badges
+      <div class="nav-icon">&#9670;</div>Badges
     </div>
     <div class="nav-item" data-view="scan">
-      <div class="nav-icon">&#8853;</div>
-      Scan
+      <div class="nav-icon">&#8853;</div>Scan
     </div>
     <div class="nav-item" data-view="board">
-      <div class="nav-icon">&#8801;</div>
-      Board
+      <div class="nav-icon">&#8801;</div>Board
     </div>
   </nav>
 
   <div class="safe-bottom"></div>
 
   <script>
-    // ── Navigation ──────────────────────────────────────────────
-    const navItems = document.querySelectorAll('.nav-item');
-    const views    = document.querySelectorAll('.view');
+  // ── State model ─────────────────────────────────────────────────────────────
 
-    navItems.forEach(item => {
-      item.addEventListener('click', () => switchView(item.dataset.view));
-    });
-
-    function switchView(name) {
-      views.forEach(v => v.classList.remove('active'));
-      navItems.forEach(n => n.classList.toggle('active', n.dataset.view === name));
-      document.getElementById('view-' + name).classList.add('active');
-
-      if (name === 'scan') startCamera();
-      else               stopCamera();
-    }
-
-    // ── QR camera ───────────────────────────────────────────────
-    const video    = document.getElementById('qr-video');
-    const canvas   = document.getElementById('qr-canvas');
-    const ctx      = canvas.getContext('2d', { willReadFrequently: true });
-    const status   = document.getElementById('cam-status');
-    const result   = document.getElementById('scan-result');
-    const resultVal = document.getElementById('result-value');
-
-    let stream  = null;
-    let rafId   = null;
-    let scanning = false;
-
-    function startCamera() {
-      // reset any previous result
-      result.classList.add('hidden');
-      status.textContent = 'Starting camera…';
-      status.classList.remove('error');
-      scanning = true;
-
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      })
-      .then(s => {
-        stream = s;
-        video.srcObject = s;
-        video.play();
-        video.addEventListener('playing', () => {
-          canvas.width  = video.videoWidth;
-          canvas.height = video.videoHeight;
-          status.textContent = 'Scanning…';
-          rafId = requestAnimationFrame(tick);
-        }, { once: true });
-      })
-      .catch(err => {
-        status.textContent = 'Camera unavailable: ' + err.message;
-        status.classList.add('error');
-      });
-    }
-
-    function stopCamera() {
-      scanning = false;
-      if (rafId)  { cancelAnimationFrame(rafId); rafId = null; }
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      video.srcObject = null;
-    }
-
-    function tick() {
-      if (!scanning) return;
-      if (video.readyState >= video.HAVE_ENOUGH_DATA) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-        if (code) { handleScan(code.data); return; }
+  const DEFAULT_STATE = {
+    student: {
+      handle: 'MagnoliaH',
+      initial: 'M',
+      points: 340,
+      earnedBadges: ['badge-larson-milton']   // Badge 1 pre-earned
+    },
+    catalog: {
+      'badge-larson-milton': {
+        id:     'badge-larson-milton',
+        title:  "Milton's Nativity Ode",
+        host:   'Tutorial with Dr. Larson',
+        points: 120,
+        qrCode: 'HONQ-LARSON-MILTON',
+        icon:   '&#128218;'                   // book
+      },
+      'badge-tarr-bahnsen': {
+        id:     'badge-tarr-bahnsen',
+        title:  'Full Time: Work and the Meaning of Life',
+        host:   'Tutorial with Dean Tarr',
+        points: 120,
+        qrCode: 'HONQ-TARR-BAHNSEN',
+        icon:   '&#128188;'                   // briefcase
+      },
+      'badge-semester-formation': {
+        id:       'badge-semester-formation',
+        title:    'Semester Formation',
+        host:     'Honors College — Spring 2026',
+        points:   100,
+        type:     'super',
+        requires: ['badge-larson-milton', 'badge-tarr-bahnsen'],
+        icon:     '&#11088;'                  // star
+      },
+      'badge-research-psych': {
+        id:     'badge-research-psych',
+        title:  'Undergraduate Research',
+        host:   'Psychology — submitted to conference',
+        points: 400,
+        qrCode: 'HONQ-RESEARCH-PSYCH',
+        icon:   '&#128300;'                   // microscope
       }
-      rafId = requestAnimationFrame(tick);
+    },
+    cohort: [
+      { handle: 'AquilaR',   points: 800 },
+      { handle: 'CrestW',    points: 520 },
+      { handle: 'PinnacleJ', points: 500 },
+      { handle: 'VaultK',    points: 290 },
+      { handle: 'MeridianB', points: 240 },
+      { handle: 'LoftusP',   points: 195 },
+      { handle: 'SummitC',   points: 140 }
+    ]
+  };
+
+  const STORAGE_KEY = 'honq_state';
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : deepClone(DEFAULT_STATE);
+    } catch (_) {
+      return deepClone(DEFAULT_STATE);
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  let state = loadState();
+
+  // ── Derived helpers ──────────────────────────────────────────────────────────
+
+  function getLeaderboard() {
+    const all = [
+      ...state.cohort.map(p => ({ ...p, isYou: false })),
+      { handle: state.student.handle, points: state.student.points, isYou: true }
+    ];
+    all.sort((a, b) => b.points - a.points);
+    all.forEach((p, i) => { p.rank = i + 1; });
+    return all;
+  }
+
+  function getStudentRank() {
+    return getLeaderboard().find(p => p.isYou).rank;
+  }
+
+  // Returns super-badges the student is partially working toward
+  function getInProgressSupers() {
+    return Object.values(state.catalog).filter(badge => {
+      if (badge.type !== 'super') return false;
+      if (state.student.earnedBadges.includes(badge.id)) return false;
+      const earnedCount = badge.requires.filter(id => state.student.earnedBadges.includes(id)).length;
+      return earnedCount > 0;
+    }).map(badge => {
+      const earnedCount = badge.requires.filter(id => state.student.earnedBadges.includes(id)).length;
+      return { ...badge, earnedCount, totalCount: badge.requires.length };
+    });
+  }
+
+  function lookupQR(code) {
+    return Object.values(state.catalog).find(b => b.qrCode === code) || null;
+  }
+
+  // ── Rendering ────────────────────────────────────────────────────────────────
+
+  function renderHome() {
+    const rank = getStudentRank();
+    const earned = state.student.earnedBadges.length;
+
+    document.getElementById('home-handle').textContent = state.student.handle;
+    document.getElementById('home-points').textContent = state.student.points;
+    document.getElementById('home-rank').textContent   = '#' + rank;
+    document.getElementById('home-badges').textContent = earned;
+    document.getElementById('hdr-avatar').textContent  = state.student.initial;
+
+    // In-progress super-badges
+    const progressArea = document.getElementById('home-progress-area');
+    const inProgress   = getInProgressSupers();
+
+    if (inProgress.length === 0) {
+      progressArea.innerHTML = '<div style="font-size:13px;color:var(--dim)">All active tracks complete.</div>';
+    } else {
+      progressArea.innerHTML = inProgress.map(b => `
+        <div class="progress-card">
+          <div class="progress-title">${b.title}</div>
+          <div class="progress-sub">${b.earnedCount} of ${b.totalCount} tutorials complete</div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${Math.round(b.earnedCount / b.totalCount * 100)}%"></div>
+          </div>
+        </div>
+      `).join('');
     }
 
-    // ── Scan result handler ──────────────────────────────────────
-    function handleScan(value) {
-      stopCamera();
-      status.textContent = '';
-      resultVal.textContent = value;
-      result.classList.remove('hidden');
+    // Leaderboard preview: show top 3 + student (if not in top 3)
+    const lb = getLeaderboard();
+    const preview = lb.slice(0, 3);
+    const youEntry = lb.find(p => p.isYou);
+    if (youEntry.rank > 3) preview.push(youEntry);
+
+    document.getElementById('home-lb').innerHTML = preview.map(p => `
+      <div class="lb-row">
+        <div class="rank ${p.isYou ? 'you' : ''}">${p.rank}</div>
+        <div class="lb-name ${p.isYou ? 'you' : ''}">${p.handle}${p.isYou ? ' &nbsp;&#9664; you' : ''}</div>
+        <div class="lb-score ${p.isYou ? 'you' : ''}">${p.points} pts</div>
+      </div>
+    `).join('');
+  }
+
+  function renderBadges() {
+    const earned = state.student.earnedBadges;
+    const items  = Object.values(state.catalog);
+
+    document.getElementById('badge-list').innerHTML = items.map(b => {
+      const isEarned = earned.includes(b.id);
+      // Super-badges that require a QR: not locked, show progress
+      const isSuper  = b.type === 'super';
+      const isLocked = !isEarned && isSuper &&
+        b.requires.every(id => !earned.includes(id));
+
+      return `
+        <div class="badge-card ${isLocked ? 'locked' : ''}">
+          <div class="badge-icon ${isSuper ? 'super' : ''}">${b.icon}</div>
+          <div class="badge-info">
+            <div class="badge-title">${b.title}</div>
+            <div class="badge-host">${b.host}</div>
+          </div>
+          <div class="badge-status ${isEarned ? 'earned' : 'locked'}">
+            ${isEarned ? 'Earned' : isSuper ? 'In progress' : 'Locked'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderBoard() {
+    const lb = getLeaderboard();
+    document.getElementById('board-list').innerHTML = lb.map(p => `
+      <div class="lb-row">
+        <div class="rank ${p.isYou ? 'you' : ''}">${p.rank}</div>
+        <div class="lb-name ${p.isYou ? 'you' : ''}">${p.handle}${p.isYou ? ' &nbsp;&#9664; you' : ''}</div>
+        <div class="lb-score ${p.isYou ? 'you' : ''}">${p.points} pts</div>
+      </div>
+    `).join('');
+  }
+
+  function renderAll() {
+    renderHome();
+    renderBadges();
+    renderBoard();
+  }
+
+  // ── Navigation ───────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => switchView(item.dataset.view));
+  });
+
+  function switchView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.view === name));
+    document.getElementById('view-' + name).classList.add('active');
+
+    if (name === 'scan') startCamera();
+    else               stopCamera();
+  }
+
+  // ── QR camera ────────────────────────────────────────────────────────────────
+
+  const video     = document.getElementById('qr-video');
+  const canvas    = document.getElementById('qr-canvas');
+  const ctx       = canvas.getContext('2d', { willReadFrequently: true });
+  const camStatus = document.getElementById('cam-status');
+  const scanResult = document.getElementById('scan-result');
+
+  let camStream = null;
+  let rafId     = null;
+  let scanning  = false;
+
+  function startCamera() {
+    scanResult.classList.add('hidden');
+    camStatus.textContent = 'Starting camera…';
+    camStatus.classList.remove('error');
+    scanning = true;
+
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    })
+    .then(s => {
+      camStream = s;
+      video.srcObject = s;
+      video.play();
+      video.addEventListener('playing', () => {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        camStatus.textContent = 'Scanning…';
+        rafId = requestAnimationFrame(tick);
+      }, { once: true });
+    })
+    .catch(err => {
+      camStatus.textContent = 'Camera unavailable: ' + err.message;
+      camStatus.classList.add('error');
+    });
+  }
+
+  function stopCamera() {
+    scanning = false;
+    if (rafId)     { cancelAnimationFrame(rafId); rafId = null; }
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+    video.srcObject = null;
+  }
+
+  function tick() {
+    if (!scanning) return;
+    if (video.readyState >= video.HAVE_ENOUGH_DATA) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code) { handleScan(code.data); return; }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Scan result ──────────────────────────────────────────────────────────────
+
+  function handleScan(raw) {
+    stopCamera();
+    camStatus.textContent = '';
+
+    const badge = lookupQR(raw);
+    const icon  = document.getElementById('result-icon');
+    const val   = document.getElementById('result-value');
+    const sub   = document.getElementById('result-sub');
+
+    if (badge) {
+      if (state.student.earnedBadges.includes(badge.id)) {
+        icon.innerHTML = '&#9670;';
+        val.textContent = badge.title;
+        sub.textContent = 'You already have this badge.';
+      } else {
+        icon.innerHTML = badge.icon;
+        val.textContent = badge.title;
+        sub.textContent = badge.host + ' — award coming in next build';
+      }
+    } else {
+      icon.innerHTML = '&#10008;';
+      val.textContent = raw;
+      sub.textContent = 'Unknown code.';
     }
 
-    // ── Scan-again button ────────────────────────────────────────
-    document.getElementById('scan-again').addEventListener('click', startCamera);
+    scanResult.classList.remove('hidden');
+  }
 
-    // ── Manual fallback ──────────────────────────────────────────
-    const manualInput = document.getElementById('manual-input');
-    const manualBtn   = document.getElementById('manual-btn');
+  document.getElementById('scan-again').addEventListener('click', startCamera);
 
-    manualBtn.addEventListener('click', () => {
-      const val = manualInput.value.trim();
-      if (val) { manualInput.value = ''; handleScan(val); }
-    });
+  // ── Manual fallback ──────────────────────────────────────────────────────────
 
-    manualInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') manualBtn.click();
-    });
+  const manualInput = document.getElementById('manual-input');
+  document.getElementById('manual-btn').addEventListener('click', () => {
+    const val = manualInput.value.trim();
+    if (val) { manualInput.value = ''; handleScan(val); }
+  });
+  manualInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('manual-btn').click();
+  });
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+
+  renderAll();
   </script>
 </body>
 </html>
