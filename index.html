@@ -338,6 +338,12 @@
       </div>
       <div id="home-lb"></div>
     </div>
+
+    <div style="padding: 8px 20px 28px; text-align: center;">
+      <span id="reset-btn" style="font-size:11px; color:var(--border); cursor:pointer; user-select:none;">
+        reset demo
+      </span>
+    </div>
   </div>
 
   <!-- ── Badges ── -->
@@ -774,6 +780,15 @@
       container.appendChild(star);
     }
   }
+
+  // ── Reset ────────────────────────────────────────────────────────────────────
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Reset demo to starting state?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = deepClone(DEFAULT_STATE);
+    renderAll();
+  });
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
 
