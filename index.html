@@ -6,15 +6,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Honq</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     :root {
-      --bg:       #0d0b1e;
-      --surface:  #1a1730;
-      --border:   #2a2650;
-      --gold:     #f0c040;
-      --text:     #ffffff;
-      --dim:      #8a8aaa;
-      --green:    #4ade80;
+      --bg:      #0d0b1e;
+      --surface: #1a1730;
+      --border:  #2a2650;
+      --gold:    #f0c040;
+      --text:    #ffffff;
+      --dim:     #8a8aaa;
+      --green:   #4ade80;
+      --red:     #f87171;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,9 +30,12 @@
       margin: 0 auto;
     }
 
-    /* iPhone notch / Dynamic Island */
     .safe-top    { height: env(safe-area-inset-top, 44px); }
     .safe-bottom { height: env(safe-area-inset-bottom, 20px); }
+
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active { display: block; }
 
     /* ── Header ── */
     header {
@@ -40,10 +45,8 @@
       align-items: center;
       border-bottom: 1px solid var(--border);
     }
-
     .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--gold); }
     .logo span { color: var(--text); }
-
     .avatar {
       width: 36px; height: 36px; border-radius: 50%;
       background: var(--gold); color: var(--bg);
@@ -51,38 +54,28 @@
       font-weight: 700; font-size: 14px;
     }
 
-    /* ── Hero / student card ── */
+    /* ── Home: hero ── */
     .hero {
       padding: 28px 20px 24px;
       background: linear-gradient(160deg, #1a1730 0%, #0d0b1e 100%);
     }
-
     .greeting { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .handle   { font-size: 28px; font-weight: 700; margin-bottom: 20px; }
-
     .stats-row { display: flex; gap: 10px; }
-
     .stat-card {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
     }
-
     .stat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
     .stat-value { font-size: 24px; font-weight: 700; }
     .stat-value.gold  { color: var(--gold); }
     .stat-value.green { color: var(--green); }
 
-    /* ── Sections ── */
+    /* ── Shared section layout ── */
     .section { padding: 24px 20px; }
-
-    .section-header {
-      display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;
-    }
-    .section-title { font-size: 16px; font-weight: 600; }
-    .section-link  { font-size: 13px; color: var(--gold); text-decoration: none; }
+    .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+    .section-title  { font-size: 16px; font-weight: 600; }
+    .section-link   { font-size: 13px; color: var(--gold); text-decoration: none; }
 
     /* ── Progress card ── */
     .progress-card {
@@ -91,27 +84,128 @@
     }
     .progress-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
     .progress-sub   { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
-
     .progress-track { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
     .progress-fill  { background: var(--gold); border-radius: 4px; height: 100%; }
 
     /* ── Leaderboard ── */
-    .lb-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 0; border-bottom: 1px solid var(--border);
-    }
+    .lb-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
     .lb-row:last-child { border-bottom: none; }
-
-    .rank      { font-size: 13px; font-weight: 700; color: var(--dim); width: 18px; text-align: center; }
-    .rank.you  { color: var(--gold); }
-    .lb-name   { flex: 1; font-size: 14px; }
+    .rank       { font-size: 13px; font-weight: 700; color: var(--dim); width: 18px; text-align: center; }
+    .rank.you   { color: var(--gold); }
+    .lb-name    { flex: 1; font-size: 14px; }
     .lb-name.you { font-weight: 700; color: var(--gold); }
-    .lb-score  { font-size: 14px; font-weight: 600; color: var(--dim); }
+    .lb-score   { font-size: 14px; font-weight: 600; color: var(--dim); }
     .lb-score.you { color: var(--gold); }
+
+    /* ── Scan view ── */
+    .page-header { padding: 24px 20px 16px; }
+    .page-title  { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .page-sub    { font-size: 13px; color: var(--dim); line-height: 1.5; }
+
+    .camera-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #qr-video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* hidden canvas used only for jsQR frame capture */
+    #qr-canvas { display: none; }
+
+    /* aiming guide overlay */
+    .aim-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .aim-box {
+      width: 60%; aspect-ratio: 1 / 1;
+      border: 2px solid rgba(240, 192, 64, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+    }
+
+    .cam-status {
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--dim);
+      text-align: center;
+      min-height: 40px;
+    }
+    .cam-status.error { color: var(--red); }
+
+    /* result card */
+    .scan-result {
+      margin: 0 20px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .scan-result.hidden { display: none; }
+
+    .result-icon  { font-size: 32px; margin-bottom: 8px; }
+    .result-label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .result-value {
+      font-size: 15px; font-weight: 600; font-family: monospace;
+      color: var(--gold); word-break: break-all; margin-bottom: 16px;
+    }
+
+    /* manual entry */
+    .manual-section { padding: 0 20px 24px; }
+    .divider-label {
+      font-size: 11px; color: var(--dim); text-align: center;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .divider-label::before,
+    .divider-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .manual-row { display: flex; gap: 8px; }
+
+    input[type="text"] {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      color: var(--text); font-size: 14px; font-family: monospace;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--gold); }
+    input[type="text"]::placeholder { color: var(--dim); }
+
+    .btn-primary {
+      background: var(--gold); color: var(--bg);
+      border: none; border-radius: 10px;
+      padding: 12px 18px; font-size: 14px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-secondary {
+      background: transparent; color: var(--gold);
+      border: 1px solid var(--gold); border-radius: 10px;
+      padding: 10px 18px; font-size: 14px; font-weight: 600;
+      cursor: pointer; width: 100%;
+    }
+
+    /* ── Placeholder views ── */
+    .placeholder {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--dim);
+      font-size: 14px;
+    }
 
     /* ── Bottom nav ── */
     .nav-spacer { height: 68px; }
-
     nav {
       position: fixed; bottom: 0;
       left: 50%; transform: translateX(-50%);
@@ -120,7 +214,6 @@
       display: flex;
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
-
     .nav-item {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; padding: 10px; gap: 4px;
@@ -140,87 +233,134 @@
     <div class="avatar">M</div>
   </header>
 
-  <div class="hero">
-    <div class="greeting">Welcome back</div>
-    <div class="handle">MagnoliaH</div>
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Points</div>
-        <div class="stat-value gold">340</div>
+  <!-- ── Home view ── -->
+  <div id="view-home" class="view active">
+    <div class="hero">
+      <div class="greeting">Welcome back</div>
+      <div class="handle">MagnoliaH</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Points</div>
+          <div class="stat-value gold">340</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rank</div>
+          <div class="stat-value">#4</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Badges</div>
+          <div class="stat-value green">2</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Rank</div>
-        <div class="stat-value">#4</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">In Progress</div>
+        <a class="section-link" href="#">See all</a>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Badges</div>
-        <div class="stat-value green">2</div>
+      <div class="progress-card">
+        <div class="progress-title">Semester Formation</div>
+        <div class="progress-sub">1 of 2 tutorials complete</div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: 50%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="padding-top: 0">
+      <div class="section-header">
+        <div class="section-title">Leaderboard</div>
+        <a class="section-link" href="#">Full board</a>
+      </div>
+      <div class="lb-row">
+        <div class="rank">1</div>
+        <div class="lb-name">AquilaR</div>
+        <div class="lb-score">520 pts</div>
+      </div>
+      <div class="lb-row">
+        <div class="rank">2</div>
+        <div class="lb-name">CrestW</div>
+        <div class="lb-score">480 pts</div>
+      </div>
+      <div class="lb-row">
+        <div class="rank">3</div>
+        <div class="lb-name">PinnacleJ</div>
+        <div class="lb-score">410 pts</div>
+      </div>
+      <div class="lb-row">
+        <div class="rank you">4</div>
+        <div class="lb-name you">MagnoliaH &nbsp;&#9664; you</div>
+        <div class="lb-score you">340 pts</div>
+      </div>
+      <div class="lb-row">
+        <div class="rank">5</div>
+        <div class="lb-name">VaultK</div>
+        <div class="lb-score">290 pts</div>
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title">In Progress</div>
-      <a class="section-link" href="#">See all</a>
+  <!-- ── Badges view (placeholder) ── -->
+  <div id="view-badges" class="view">
+    <div class="placeholder">Badge case coming in Step 5.</div>
+  </div>
+
+  <!-- ── Scan view ── -->
+  <div id="view-scan" class="view">
+    <div class="page-header">
+      <div class="page-title">Scan QR Code</div>
+      <div class="page-sub">Point your camera at the code your professor is displaying.</div>
     </div>
-    <div class="progress-card">
-      <div class="progress-title">Semester Formation</div>
-      <div class="progress-sub">1 of 2 tutorials complete</div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width: 50%"></div>
+
+    <div class="camera-wrap">
+      <video id="qr-video" playsinline muted></video>
+      <canvas id="qr-canvas"></canvas>
+      <div class="aim-overlay">
+        <div class="aim-box"></div>
+      </div>
+    </div>
+
+    <div id="cam-status" class="cam-status">Starting camera&hellip;</div>
+
+    <div id="scan-result" class="scan-result hidden">
+      <div class="result-icon">&#10003;</div>
+      <div class="result-label">Code detected</div>
+      <div id="result-value" class="result-value"></div>
+      <button id="scan-again" class="btn-secondary">Scan again</button>
+    </div>
+
+    <div class="manual-section">
+      <div class="divider-label">or enter code manually</div>
+      <div class="manual-row">
+        <input id="manual-input" type="text" placeholder="Type code here"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button id="manual-btn" class="btn-primary">Submit</button>
       </div>
     </div>
   </div>
 
-  <div class="section" style="padding-top: 0">
-    <div class="section-header">
-      <div class="section-title">Leaderboard</div>
-      <a class="section-link" href="#">Full board</a>
-    </div>
-    <div class="lb-row">
-      <div class="rank">1</div>
-      <div class="lb-name">AquilaR</div>
-      <div class="lb-score">520 pts</div>
-    </div>
-    <div class="lb-row">
-      <div class="rank">2</div>
-      <div class="lb-name">CrestW</div>
-      <div class="lb-score">480 pts</div>
-    </div>
-    <div class="lb-row">
-      <div class="rank">3</div>
-      <div class="lb-name">PinnacleJ</div>
-      <div class="lb-score">410 pts</div>
-    </div>
-    <div class="lb-row">
-      <div class="rank you">4</div>
-      <div class="lb-name you">MagnoliaH &nbsp;&#9664; you</div>
-      <div class="lb-score you">340 pts</div>
-    </div>
-    <div class="lb-row">
-      <div class="rank">5</div>
-      <div class="lb-name">VaultK</div>
-      <div class="lb-score">290 pts</div>
-    </div>
+  <!-- ── Board view (placeholder) ── -->
+  <div id="view-board" class="view">
+    <div class="placeholder">Full leaderboard coming in Step 6.</div>
   </div>
 
   <div class="nav-spacer"></div>
 
   <nav>
-    <div class="nav-item active">
+    <div class="nav-item active" data-view="home">
       <div class="nav-icon">&#8962;</div>
       Home
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-view="badges">
       <div class="nav-icon">&#9670;</div>
       Badges
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-view="scan">
       <div class="nav-icon">&#8853;</div>
       Scan
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-view="board">
       <div class="nav-icon">&#8801;</div>
       Board
     </div>
@@ -229,7 +369,104 @@
   <div class="safe-bottom"></div>
 
   <script>
-    console.log('Honq v0 — Step 1 scaffold');
+    // ── Navigation ──────────────────────────────────────────────
+    const navItems = document.querySelectorAll('.nav-item');
+    const views    = document.querySelectorAll('.view');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => switchView(item.dataset.view));
+    });
+
+    function switchView(name) {
+      views.forEach(v => v.classList.remove('active'));
+      navItems.forEach(n => n.classList.toggle('active', n.dataset.view === name));
+      document.getElementById('view-' + name).classList.add('active');
+
+      if (name === 'scan') startCamera();
+      else               stopCamera();
+    }
+
+    // ── QR camera ───────────────────────────────────────────────
+    const video    = document.getElementById('qr-video');
+    const canvas   = document.getElementById('qr-canvas');
+    const ctx      = canvas.getContext('2d', { willReadFrequently: true });
+    const status   = document.getElementById('cam-status');
+    const result   = document.getElementById('scan-result');
+    const resultVal = document.getElementById('result-value');
+
+    let stream  = null;
+    let rafId   = null;
+    let scanning = false;
+
+    function startCamera() {
+      // reset any previous result
+      result.classList.add('hidden');
+      status.textContent = 'Starting camera…';
+      status.classList.remove('error');
+      scanning = true;
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      })
+      .then(s => {
+        stream = s;
+        video.srcObject = s;
+        video.play();
+        video.addEventListener('playing', () => {
+          canvas.width  = video.videoWidth;
+          canvas.height = video.videoHeight;
+          status.textContent = 'Scanning…';
+          rafId = requestAnimationFrame(tick);
+        }, { once: true });
+      })
+      .catch(err => {
+        status.textContent = 'Camera unavailable: ' + err.message;
+        status.classList.add('error');
+      });
+    }
+
+    function stopCamera() {
+      scanning = false;
+      if (rafId)  { cancelAnimationFrame(rafId); rafId = null; }
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      video.srcObject = null;
+    }
+
+    function tick() {
+      if (!scanning) return;
+      if (video.readyState >= video.HAVE_ENOUGH_DATA) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (code) { handleScan(code.data); return; }
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ── Scan result handler ──────────────────────────────────────
+    function handleScan(value) {
+      stopCamera();
+      status.textContent = '';
+      resultVal.textContent = value;
+      result.classList.remove('hidden');
+    }
+
+    // ── Scan-again button ────────────────────────────────────────
+    document.getElementById('scan-again').addEventListener('click', startCamera);
+
+    // ── Manual fallback ──────────────────────────────────────────
+    const manualInput = document.getElementById('manual-input');
+    const manualBtn   = document.getElementById('manual-btn');
+
+    manualBtn.addEventListener('click', () => {
+      const val = manualInput.value.trim();
+      if (val) { manualInput.value = ''; handleScan(val); }
+    });
+
+    manualInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') manualBtn.click();
+    });
   </script>
 </body>
 </html>
