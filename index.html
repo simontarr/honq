@@ -212,7 +212,7 @@
       max-width: 320px;
       position: relative;
       overflow: hidden;
-      animation: modal-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation: modal-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
     .award-modal.super-mode {
       border-color: var(--gold);
@@ -255,7 +255,7 @@
       top: 0; left: 0;
       font-size: 11px;
       color: var(--gold);
-      animation: star-fly 0.7s var(--delay, 0s) ease-out both;
+      animation: star-fly 1.1s var(--delay, 0s) ease-out both;
     }
     @keyframes star-fly {
       0%   { transform: translate(-50%,-50%) translate(0,0) scale(0.5); opacity: 1; }
@@ -740,7 +740,7 @@
     if (pendingStack) {
       stackTimeout = setTimeout(() => {
         if (pendingStack) triggerStack();
-      }, 2500);
+      }, 4000);
     }
   }
 
@@ -776,7 +776,7 @@
       const dist  = 52 + Math.random() * 28;
       star.style.setProperty('--tx', (Math.cos(angle) * dist) + 'px');
       star.style.setProperty('--ty', (Math.sin(angle) * dist) + 'px');
-      star.style.setProperty('--delay', (Math.random() * 0.15) + 's');
+      star.style.setProperty('--delay', (Math.random() * 0.25) + 's');
       container.appendChild(star);
     }
   }
