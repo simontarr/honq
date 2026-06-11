@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Honq</title>
+  <style>
+    :root {
+      --bg:       #0d0b1e;
+      --surface:  #1a1730;
+      --border:   #2a2650;
+      --gold:     #f0c040;
+      --text:     #ffffff;
+      --dim:      #8a8aaa;
+      --green:    #4ade80;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    /* iPhone notch / Dynamic Island */
+    .safe-top    { height: env(safe-area-inset-top, 44px); }
+    .safe-bottom { height: env(safe-area-inset-bottom, 20px); }
+
+    /* ── Header ── */
+    header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--gold); }
+    .logo span { color: var(--text); }
+
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gold); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+
+    /* ── Hero / student card ── */
+    .hero {
+      padding: 28px 20px 24px;
+      background: linear-gradient(160deg, #1a1730 0%, #0d0b1e 100%);
+    }
+
+    .greeting { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .handle   { font-size: 28px; font-weight: 700; margin-bottom: 20px; }
+
+    .stats-row { display: flex; gap: 10px; }
+
+    .stat-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .stat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-value.gold  { color: var(--gold); }
+    .stat-value.green { color: var(--green); }
+
+    /* ── Sections ── */
+    .section { padding: 24px 20px; }
+
+    .section-header {
+      display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;
+    }
+    .section-title { font-size: 16px; font-weight: 600; }
+    .section-link  { font-size: 13px; color: var(--gold); text-decoration: none; }
+
+    /* ── Progress card ── */
+    .progress-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .progress-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .progress-sub   { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
+
+    .progress-track { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+    .progress-fill  { background: var(--gold); border-radius: 4px; height: 100%; }
+
+    /* ── Leaderboard ── */
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .lb-row:last-child { border-bottom: none; }
+
+    .rank      { font-size: 13px; font-weight: 700; color: var(--dim); width: 18px; text-align: center; }
+    .rank.you  { color: var(--gold); }
+    .lb-name   { flex: 1; font-size: 14px; }
+    .lb-name.you { font-weight: 700; color: var(--gold); }
+    .lb-score  { font-size: 14px; font-weight: 600; color: var(--dim); }
+    .lb-score.you { color: var(--gold); }
+
+    /* ── Bottom nav ── */
+    .nav-spacer { height: 68px; }
+
+    nav {
+      position: fixed; bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 10px; gap: 4px;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--dim); cursor: pointer; user-select: none;
+    }
+    .nav-item.active { color: var(--gold); }
+    .nav-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="safe-top"></div>
+
+  <header>
+    <div class="logo">Hon<span>q</span></div>
+    <div class="avatar">M</div>
+  </header>
+
+  <div class="hero">
+    <div class="greeting">Welcome back</div>
+    <div class="handle">MagnoliaH</div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Points</div>
+        <div class="stat-value gold">340</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rank</div>
+        <div class="stat-value">#4</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Badges</div>
+        <div class="stat-value green">2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">In Progress</div>
+      <a class="section-link" href="#">See all</a>
+    </div>
+    <div class="progress-card">
+      <div class="progress-title">Semester Formation</div>
+      <div class="progress-sub">1 of 2 tutorials complete</div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: 50%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top: 0">
+    <div class="section-header">
+      <div class="section-title">Leaderboard</div>
+      <a class="section-link" href="#">Full board</a>
+    </div>
+    <div class="lb-row">
+      <div class="rank">1</div>
+      <div class="lb-name">AquilaR</div>
+      <div class="lb-score">520 pts</div>
+    </div>
+    <div class="lb-row">
+      <div class="rank">2</div>
+      <div class="lb-name">CrestW</div>
+      <div class="lb-score">480 pts</div>
+    </div>
+    <div class="lb-row">
+      <div class="rank">3</div>
+      <div class="lb-name">PinnacleJ</div>
+      <div class="lb-score">410 pts</div>
+    </div>
+    <div class="lb-row">
+      <div class="rank you">4</div>
+      <div class="lb-name you">MagnoliaH &nbsp;&#9664; you</div>
+      <div class="lb-score you">340 pts</div>
+    </div>
+    <div class="lb-row">
+      <div class="rank">5</div>
+      <div class="lb-name">VaultK</div>
+      <div class="lb-score">290 pts</div>
+    </div>
+  </div>
+
+  <div class="nav-spacer"></div>
+
+  <nav>
+    <div class="nav-item active">
+      <div class="nav-icon">&#8962;</div>
+      Home
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#9670;</div>
+      Badges
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#8853;</div>
+      Scan
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon">&#8801;</div>
+      Board
+    </div>
+  </nav>
+
+  <div class="safe-bottom"></div>
+
+  <script>
+    console.log('Honq v0 — Step 1 scaffold');
+  </script>
+</body>
+</html>
