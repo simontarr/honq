@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Honq</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Honq">
+  <meta name="copyright" content="© 2026 Simon Tarr">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    :root {
+      --bg:       #14132b;
+      --surface:  #201d3a;
+      --border:   #262248;
+      --gold:     #d4a843;
+      --text:     #efe7d2;
+      --dim:      #9a96b5;
+      --green:    #5dcaa5;
+      --red:      #f87171;
+      --parchment:     #efe7d2;
+      --parchment-ink: #2a2410;
+      --parchment-dim: #7a6f50;
+      --seal:          #7a2230;
+      --serif: 'Hoefler Text', Georgia, 'Times New Roman', serif;
+      --review-bg:          #cfc09a;
+      --review-dim:         #6a5f43;
+      --review-card:        rgba(42,36,16,0.07);
+      --review-line:        rgba(42,36,16,0.16);
+      --review-accent-line: rgba(122,34,48,0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    .safe-top    { height: env(safe-area-inset-top, 44px); }
+    .safe-bottom { height: env(safe-area-inset-bottom, 20px); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Header ── */
+    header {
+      padding: 16px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+      color: var(--gold); font-family: var(--serif);
+    }
+    .logo span { color: var(--text); }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gold); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 28px 20px 24px;
+      background: linear-gradient(160deg, var(--surface) 0%, var(--bg) 100%);
+    }
+    .greeting { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .handle   { font-size: 28px; font-weight: 700; margin-bottom: 20px; font-family: var(--serif); }
+    .stats-row { display: flex; gap: 10px; }
+    .stat-card {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px;
+    }
+    .stat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-value.gold  { color: var(--gold); }
+    .stat-value.green { color: var(--green); }
+
+    /* ── Sections ── */
+    .section { padding: 24px 20px; }
+    .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+    .section-title  { font-size: 16px; font-weight: 600; }
+    .section-link   { font-size: 13px; color: var(--gold); text-decoration: none; cursor: pointer; }
+
+    /* ── Progress card ── */
+    .progress-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .progress-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .progress-sub   { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
+    .progress-track { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+    .progress-fill  { background: var(--gold); border-radius: 4px; height: 100%; transition: width 0.5s ease; }
+
+    /* ── Leaderboard rows ── */
+    .lb-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .lb-row:last-child { border-bottom: none; }
+    .rank      { font-size: 13px; font-weight: 700; color: var(--dim); width: 18px; text-align: center; }
+    .rank.you  { color: var(--gold); }
+    .lb-name   { flex: 1; font-size: 14px; }
+    .lb-name.you { font-weight: 700; color: var(--gold); }
+    .lb-score  { font-size: 14px; font-weight: 600; color: var(--dim); }
+    .lb-score.you { color: var(--gold); }
+
+    /* ── Badges view ── */
+    .page-header { padding: 24px 20px 16px; }
+    .page-title  { font-size: 20px; font-weight: 700; margin-bottom: 6px; font-family: var(--serif); }
+    .page-sub    { font-size: 13px; color: var(--dim); line-height: 1.5; }
+
+    .badge-list { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+    .badge-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .badge-card.earned { border-color: #2e4030; }
+    .badge-card.locked { opacity: 0.4; }
+
+    .badge-info { flex: 1; min-width: 0; }
+    .badge-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .badge-host  { font-size: 12px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge-pts   { font-size: 11px; color: var(--gold); margin-top: 3px; }
+    .badge-status { flex-shrink: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-status.earned  { color: var(--green); }
+    .badge-status.pending { color: var(--gold); }
+    .badge-status.locked  { color: var(--dim); }
+
+    /* ── Scan view ── */
+    .camera-wrap {
+      position: relative; width: 100%; aspect-ratio: 1 / 1;
+      background: #000; overflow: hidden;
+    }
+    #qr-video  { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #qr-canvas { display: none; }
+    .aim-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .aim-box {
+      width: 60%; aspect-ratio: 1 / 1;
+      border: 2px solid rgba(212,168,67,0.8); border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+    }
+    .cam-status {
+      padding: 12px 20px; font-size: 13px; color: var(--dim);
+      text-align: center; min-height: 40px;
+    }
+    .cam-status.error { color: var(--red); }
+
+    .scan-result {
+      margin: 0 20px 20px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; text-align: center;
+    }
+    .scan-result.hidden { display: none; }
+    .result-icon  { font-size: 28px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; }
+    .result-label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .result-value { font-size: 15px; font-weight: 600; color: var(--gold); word-break: break-all; margin-bottom: 4px; }
+    .result-sub   { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+
+    /* ── Manual entry ── */
+    .manual-section { padding: 0 20px 24px; }
+    .divider-label {
+      font-size: 11px; color: var(--dim); text-align: center;
+      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .divider-label::before, .divider-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .manual-row { display: flex; gap: 8px; }
+
+    input[type="text"] {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      color: var(--text); font-size: 14px; font-family: monospace; outline: none;
+    }
+    input[type="text"]:focus { border-color: var(--gold); }
+    input[type="text"]::placeholder { color: var(--dim); font-family: inherit; }
+
+    .btn-primary {
+      background: var(--gold); color: var(--bg);
+      border: none; border-radius: 10px;
+      padding: 12px 18px; font-size: 14px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-secondary {
+      background: transparent; color: var(--gold);
+      border: 1px solid var(--gold); border-radius: 10px;
+      padding: 10px 18px; font-size: 14px; font-weight: 600;
+      cursor: pointer; width: 100%;
+    }
+
+    /* ── Award overlay ── */
+    .award-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .award-overlay.hidden { display: none; }
+
+    .award-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 30px 28px 24px;
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+      position: relative;
+      overflow: hidden;
+      animation: modal-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .award-modal.super-mode {
+      border-color: var(--gold);
+      box-shadow: 0 0 32px rgba(212,168,67,0.2);
+    }
+
+    @keyframes modal-pop {
+      from { transform: scale(0.55); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .award-type {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--dim); margin-bottom: 16px;
+    }
+    .award-type.super { color: var(--gold); }
+
+    /* ── Stamp animation ── */
+    .award-icon-area {
+      position: relative; width: 150px; height: 150px;
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .award-ring {
+      position: absolute;
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      opacity: 0;
+      pointer-events: none;
+    }
+    @keyframes ring-expand {
+      0%   { transform: scale(1);   opacity: 0.65; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    @keyframes seal-stamp {
+      0%   { transform: scale(1.7) rotate(-6deg); opacity: 0; }
+      55%  { transform: scale(0.91) rotate(2deg); opacity: 1; }
+      100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+
+    .award-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; font-family: var(--serif); }
+    .award-host  { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
+    .award-pts   {
+      display: inline-block;
+      background: rgba(212,168,67,0.12); color: var(--gold);
+      font-size: 16px; font-weight: 700;
+      padding: 6px 16px; border-radius: 20px;
+      margin-bottom: 18px;
+    }
+
+    /* ── Advisor view ── */
+    .adv-name { font-size: 18px; font-weight: 600; font-family: var(--serif); margin-bottom: 3px; }
+
+    #view-advisor {
+      background: var(--review-bg);
+      color: var(--parchment-ink);
+      min-height: calc(100vh - 120px);
+    }
+    #view-advisor .stat-card        { background: var(--review-card); border-color: var(--review-line); }
+    #view-advisor .stat-label       { color: var(--review-dim); }
+    #view-advisor .stat-value.gold  { color: var(--seal); }
+    #view-advisor .stat-value.green { color: var(--parchment-ink); }
+    #view-advisor .btn-secondary    { color: var(--seal); border-color: var(--seal); }
+
+    /* ── Bottom nav ── */
+    .nav-spacer { height: 68px; }
+    nav {
+      position: fixed; bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 10px; gap: 4px;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--dim); cursor: pointer; user-select: none;
+    }
+    .nav-item.active { color: var(--gold); }
+    .nav-icon { font-size: 20px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="goose-plain" viewBox="0 0 500.53 530.9">
+      <path d="M497.32,275.55c-.98-3.5-5.78-5.03-8.36-2.21-13.2,14.44-29.11,27.65-49.17,30.25-21.68,2.81-43.24-5.82-62.67-14.41-40.24-17.79-80.68-34.27-122.85-47.01-16.67-5.04-33.49-9.57-50.43-13.62-1.75-.42-2.84-2.13-2.49-3.89,2.91-14.73,5.04-29.62,6.35-44.6,3.41-39.02,2.2-79.89-13.61-116.32-6.23-14.36-14.81-27.73-25.64-39.01-.27-.64-.7-1.24-1.35-1.74-.72-.59-1.43-1.17-2.15-1.76-1.7-1.62-3.64-2.87-5.57-4.22-2.37-1.65-4.39-2.91-4.81-3.05-.25-.09-2.96-1.29-4.79-2.38-9.19-5.47-14.15-6.8-24.52-9.03-9.57-2.05-21.4-4.03-30.93-.89-3.53,1.17-6.18,3.67-9.08,6.16-1.27.99-1.71,1.49-2.96,2.6s-1.33,1.14-2.06,2.61c-.38.77-.52,1.64-.77,2.46-16.36,4.85-32.72,9.68-49.06,14.6-6.84,2.06-13.83,4.32-19.58,8.72-4.86,3.72-10.61,10.28-7.68,16.82,2.89,6.46,12.36,6.89,18.3,8.3,9.56,2.26,19.11,4.52,28.67,6.78,11.57,2.74,23.15,5.47,34.72,8.21,1.73,2.72,3.64,5.36,5.6,7.9,9.89,12.87,19.74,25.72,29.02,39.05,5.5,7.9,11.26,16,15,24.86.94,15.35-1.37,30.71-7.21,45.03-6.29,15.4-16.77,28.6-26.34,42.03-14.86,20.87-29.08,47.97-21.96,73.55.43,9.7,5.61,19.21,10.97,27.16,7.62,11.31,16.75,21.55,26.77,30.79,20.87,19.23,45.13,34.53,69.19,49.4,13.31,8.23,26.89,13.36,42.44,15.45,2.31.31,4.63.58,6.95.82-.57,1.1-1.05,2.02-1.23,2.43-1.72,3.89-3.45,7.78-5.17,11.67-2.72,6.14-5.44,12.29-8.16,18.43-4.26-.9-8.6-1.53-12.93-2.17-5.22-1.38-10.32-3.11-15.19-5.45-4.33-2.08-8.11-4.52-13.04-4.72-1.23-.05-2.72.8-4.55.48-2.38-.61-3.26-.64-5.8-.81-2-.13-4.47,1.63-4.82,3.67-.61,3.47-.91,6.92-.7,10.44l3.19,25.79c2.07,7.53,5.96,15.96,14.36,17.83,9.25,2.06,18.8-4.61,26.29-9.14,9.13-5.52,17.75-11.85,25.9-18.73,2.29-1.93,1.98-4.47.51-6.24.07-.14.15-.28.21-.44,5.77-13.81,11.11-27.78,16.06-41.89,8.9.48,17.83.59,26.71.45,4.31-.07,8.62-.21,12.94-.41,9.05.45,18.11.38,27.12-.21.08,4.33.16,8.66.25,13,.13,6.63.25,13.27.38,19.9-.46.09-.92.24-1.39.47-6.83,3.39-13.9,6.14-21.24,8.2-7.06,1.98-14.19,2.58-21.32,4.05-4.86,1-9.12,4.26-8.61,9.64.52,5.46,3.93,11.85,6.42,16.66,4.67,9.03,14.95,21.86,25.7,13.65,10.15-7.74,19.87-16.16,29.65-24.43,2.24-1.12,4.68-1.79,7.26-1.94,5.49-.32,6.29-7.71,2.35-9.58-6.2-10.04-4.44-24.09-4.71-35.35-.11-4.78.59-10.65-.07-15.71,10.25-1.33,20.41-3.35,30.41-6.05,4.83-.27,9.51-1.14,13.33-3.54,53.22-15.3,109.01-45.71,122.61-103.93,3.5-15,3.49-30.58-.67-45.43ZM15.53,52.23c-1.22-.3-2.82-.53-2.91-1.18-.07-.48,2.23-2.56,2.71-3.02,2.1-2,4.65-3.45,7.26-4.65,6.04-2.78,12.71-4.33,19.06-6.22,11.73-3.49,23.47-6.98,35.2-10.47-2.09,12.27-1.73,24.83,1.05,37.13.13.58.36,1.07.62,1.5.19.67.4,1.34.62,2-21.22-4.97-42.45-9.92-63.61-15.09Z"/>
+      <circle fill="#fff" cx="127.14" cy="41.35" r="6.07"/>
+    </symbol>
+    <symbol id="goose-book" viewBox="0 0 500.53 530.9">
+      <path d="M497.32,275.55c-.98-3.5-5.78-5.03-8.36-2.21-13.2,14.44-29.11,27.65-49.17,30.25-21.68,2.81-43.24-5.82-62.67-14.41-40.24-17.79-80.68-34.27-122.85-47.01-16.67-5.04-33.49-9.57-50.43-13.62-1.75-.42-2.84-2.13-2.49-3.89,2.91-14.73,5.04-29.62,6.35-44.6,3.41-39.02,2.2-79.89-13.61-116.32-6.23-14.36-14.81-27.73-25.64-39.01-.27-.64-.7-1.24-1.35-1.74-.72-.59-1.43-1.17-2.15-1.76-1.7-1.62-3.64-2.87-5.57-4.22-2.37-1.65-4.39-2.91-4.81-3.05-.25-.09-2.96-1.29-4.79-2.38-9.19-5.47-14.15-6.8-24.52-9.03-9.57-2.05-21.4-4.03-30.93-.89-3.53,1.17-6.18,3.67-9.08,6.16-1.27.99-1.71,1.49-2.96,2.6s-1.33,1.14-2.06,2.61c-.38.77-.52,1.64-.77,2.46-16.36,4.85-32.72,9.68-49.06,14.6-6.84,2.06-13.83,4.32-19.58,8.72-4.86,3.72-10.61,10.28-7.68,16.82,2.89,6.46,12.36,6.89,18.3,8.3,9.56,2.26,19.11,4.52,28.67,6.78,11.57,2.74,23.15,5.47,34.72,8.21,1.73,2.72,3.64,5.36,5.6,7.9,9.89,12.87,19.74,25.72,29.02,39.05,5.5,7.9,11.26,16,15,24.86.94,15.35-1.37,30.71-7.21,45.03-6.29,15.4-16.77,28.6-26.34,42.03-14.86,20.87-29.08,47.97-21.96,73.55.43,9.7,5.61,19.21,10.97,27.16,7.62,11.31,16.75,21.55,26.77,30.79,20.87,19.23,45.13,34.53,69.19,49.4,13.31,8.23,26.89,13.36,42.44,15.45,2.31.31,4.63.58,6.95.82-.57,1.1-1.05,2.02-1.23,2.43-1.72,3.89-3.45,7.78-5.17,11.67-2.72,6.14-5.44,12.29-8.16,18.43-4.26-.9-8.6-1.53-12.93-2.17-5.22-1.38-10.32-3.11-15.19-5.45-4.33-2.08-8.11-4.52-13.04-4.72-1.23-.05-2.72.8-4.55.48-2.38-.61-3.26-.64-5.8-.81-2-.13-4.47,1.63-4.82,3.67-.61,3.47-.91,6.92-.7,10.44l3.19,25.79c2.07,7.53,5.96,15.96,14.36,17.83,9.25,2.06,18.8-4.61,26.29-9.14,9.13-5.52,17.75-11.85,25.9-18.73,2.29-1.93,1.98-4.47.51-6.24.07-.14.15-.28.21-.44,5.77-13.81,11.11-27.78,16.06-41.89,8.9.48,17.83.59,26.71.45,4.31-.07,8.62-.21,12.94-.41,9.05.45,18.11.38,27.12-.21.08,4.33.16,8.66.25,13,.13,6.63.25,13.27.38,19.9-.46.09-.92.24-1.39.47-6.83,3.39-13.9,6.14-21.24,8.2-7.06,1.98-14.19,2.58-21.32,4.05-4.86,1-9.12,4.26-8.61,9.64.52,5.46,3.93,11.85,6.42,16.66,4.67,9.03,14.95,21.86,25.7,13.65,10.15-7.74,19.87-16.16,29.65-24.43,2.24-1.12,4.68-1.79,7.26-1.94,5.49-.32,6.29-7.71,2.35-9.58-6.2-10.04-4.44-24.09-4.71-35.35-.11-4.78.59-10.65-.07-15.71,10.25-1.33,20.41-3.35,30.41-6.05,4.83-.27,9.51-1.14,13.33-3.54,53.22-15.3,109.01-45.71,122.61-103.93,3.5-15,3.49-30.58-.67-45.43ZM15.53,52.23c-1.22-.3-2.82-.53-2.91-1.18-.07-.48,2.23-2.56,2.71-3.02,2.1-2,4.65-3.45,7.26-4.65,6.04-2.78,12.71-4.33,19.06-6.22,11.73-3.49,23.47-6.98,35.2-10.47-2.09,12.27-1.73,24.83,1.05,37.13.13.58.36,1.07.62,1.5.19.67.4,1.34.62,2-21.22-4.97-42.45-9.92-63.61-15.09Z"/>
+      <circle fill="#fff" cx="127.14" cy="41.35" r="6.07"/>
+      <g stroke="#000" stroke-width="3" stroke-linejoin="round">
+        <polygon points="150,360 64,338 64,402 150,398" fill="#fff"/>
+        <polygon points="150,360 236,338 236,402 150,398" fill="#fff"/>
+        <line x1="150" y1="360" x2="150" y2="398"/>
+        <g stroke-width="2">
+          <line x1="78" y1="356" x2="134" y2="361"/>
+          <line x1="78" y1="368" x2="134" y2="373"/>
+          <line x1="78" y1="380" x2="134" y2="385"/>
+          <line x1="166" y1="361" x2="222" y2="356"/>
+          <line x1="166" y1="373" x2="222" y2="368"/>
+          <line x1="166" y1="385" x2="222" y2="380"/>
+        </g>
+      </g>
+    </symbol>
+    <symbol id="goose-specs" viewBox="0 0 500.53 530.9">
+      <path d="M497.32,275.55c-.98-3.5-5.78-5.03-8.36-2.21-13.2,14.44-29.11,27.65-49.17,30.25-21.68,2.81-43.24-5.82-62.67-14.41-40.24-17.79-80.68-34.27-122.85-47.01-16.67-5.04-33.49-9.57-50.43-13.62-1.75-.42-2.84-2.13-2.49-3.89,2.91-14.73,5.04-29.62,6.35-44.6,3.41-39.02,2.2-79.89-13.61-116.32-6.23-14.36-14.81-27.73-25.64-39.01-.27-.64-.7-1.24-1.35-1.74-.72-.59-1.43-1.17-2.15-1.76-1.7-1.62-3.64-2.87-5.57-4.22-2.37-1.65-4.39-2.91-4.81-3.05-.25-.09-2.96-1.29-4.79-2.38-9.19-5.47-14.15-6.8-24.52-9.03-9.57-2.05-21.4-4.03-30.93-.89-3.53,1.17-6.18,3.67-9.08,6.16-1.27.99-1.71,1.49-2.96,2.6s-1.33,1.14-2.06,2.61c-.38.77-.52,1.64-.77,2.46-16.36,4.85-32.72,9.68-49.06,14.6-6.84,2.06-13.83,4.32-19.58,8.72-4.86,3.72-10.61,10.28-7.68,16.82,2.89,6.46,12.36,6.89,18.3,8.3,9.56,2.26,19.11,4.52,28.67,6.78,11.57,2.74,23.15,5.47,34.72,8.21,1.73,2.72,3.64,5.36,5.6,7.9,9.89,12.87,19.74,25.72,29.02,39.05,5.5,7.9,11.26,16,15,24.86.94,15.35-1.37,30.71-7.21,45.03-6.29,15.4-16.77,28.6-26.34,42.03-14.86,20.87-29.08,47.97-21.96,73.55.43,9.7,5.61,19.21,10.97,27.16,7.62,11.31,16.75,21.55,26.77,30.79,20.87,19.23,45.13,34.53,69.19,49.4,13.31,8.23,26.89,13.36,42.44,15.45,2.31.31,4.63.58,6.95.82-.57,1.1-1.05,2.02-1.23,2.43-1.72,3.89-3.45,7.78-5.17,11.67-2.72,6.14-5.44,12.29-8.16,18.43-4.26-.9-8.6-1.53-12.93-2.17-5.22-1.38-10.32-3.11-15.19-5.45-4.33-2.08-8.11-4.52-13.04-4.72-1.23-.05-2.72.8-4.55.48-2.38-.61-3.26-.64-5.8-.81-2-.13-4.47,1.63-4.82,3.67-.61,3.47-.91,6.92-.7,10.44l3.19,25.79c2.07,7.53,5.96,15.96,14.36,17.83,9.25,2.06,18.8-4.61,26.29-9.14,9.13-5.52,17.75-11.85,25.9-18.73,2.29-1.93,1.98-4.47.51-6.24.07-.14.15-.28.21-.44,5.77-13.81,11.11-27.78,16.06-41.89,8.9.48,17.83.59,26.71.45,4.31-.07,8.62-.21,12.94-.41,9.05.45,18.11.38,27.12-.21.08,4.33.16,8.66.25,13,.13,6.63.25,13.27.38,19.9-.46.09-.92.24-1.39.47-6.83,3.39-13.9,6.14-21.24,8.2-7.06,1.98-14.19,2.58-21.32,4.05-4.86,1-9.12,4.26-8.61,9.64.52,5.46,3.93,11.85,6.42,16.66,4.67,9.03,14.95,21.86,25.7,13.65,10.15-7.74,19.87-16.16,29.65-24.43,2.24-1.12,4.68-1.79,7.26-1.94,5.49-.32,6.29-7.71,2.35-9.58-6.2-10.04-4.44-24.09-4.71-35.35-.11-4.78.59-10.65-.07-15.71,10.25-1.33,20.41-3.35,30.41-6.05,4.83-.27,9.51-1.14,13.33-3.54,53.22-15.3,109.01-45.71,122.61-103.93,3.5-15,3.49-30.58-.67-45.43ZM15.53,52.23c-1.22-.3-2.82-.53-2.91-1.18-.07-.48,2.23-2.56,2.71-3.02,2.1-2,4.65-3.45,7.26-4.65,6.04-2.78,12.71-4.33,19.06-6.22,11.73-3.49,23.47-6.98,35.2-10.47-2.09,12.27-1.73,24.83,1.05,37.13.13.58.36,1.07.62,1.5.19.67.4,1.34.62,2-21.22-4.97-42.45-9.92-63.61-15.09Z"/>
+      <circle fill="#fff" cx="127.14" cy="41.35" r="6.07"/>
+      <g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round">
+        <circle cx="127" cy="41" r="30"/>
+        <path d="M99 36 L80 42"/>
+        <path d="M156 34 C185 18, 205 16, 214 26"/>
+      </g>
+    </symbol>
+    <symbol id="goose-cap" viewBox="0 -90 500.53 620.9">
+      <path d="M497.32,275.55c-.98-3.5-5.78-5.03-8.36-2.21-13.2,14.44-29.11,27.65-49.17,30.25-21.68,2.81-43.24-5.82-62.67-14.41-40.24-17.79-80.68-34.27-122.85-47.01-16.67-5.04-33.49-9.57-50.43-13.62-1.75-.42-2.84-2.13-2.49-3.89,2.91-14.73,5.04-29.62,6.35-44.6,3.41-39.02,2.2-79.89-13.61-116.32-6.23-14.36-14.81-27.73-25.64-39.01-.27-.64-.7-1.24-1.35-1.74-.72-.59-1.43-1.17-2.15-1.76-1.7-1.62-3.64-2.87-5.57-4.22-2.37-1.65-4.39-2.91-4.81-3.05-.25-.09-2.96-1.29-4.79-2.38-9.19-5.47-14.15-6.8-24.52-9.03-9.57-2.05-21.4-4.03-30.93-.89-3.53,1.17-6.18,3.67-9.08,6.16-1.27.99-1.71,1.49-2.96,2.6s-1.33,1.14-2.06,2.61c-.38.77-.52,1.64-.77,2.46-16.36,4.85-32.72,9.68-49.06,14.6-6.84,2.06-13.83,4.32-19.58,8.72-4.86,3.72-10.61,10.28-7.68,16.82,2.89,6.46,12.36,6.89,18.3,8.3,9.56,2.26,19.11,4.52,28.67,6.78,11.57,2.74,23.15,5.47,34.72,8.21,1.73,2.72,3.64,5.36,5.6,7.9,9.89,12.87,19.74,25.72,29.02,39.05,5.5,7.9,11.26,16,15,24.86.94,15.35-1.37,30.71-7.21,45.03-6.29,15.4-16.77,28.6-26.34,42.03-14.86,20.87-29.08,47.97-21.96,73.55.43,9.7,5.61,19.21,10.97,27.16,7.62,11.31,16.75,21.55,26.77,30.79,20.87,19.23,45.13,34.53,69.19,49.4,13.31,8.23,26.89,13.36,42.44,15.45,2.31.31,4.63.58,6.95.82-.57,1.1-1.05,2.02-1.23,2.43-1.72,3.89-3.45,7.78-5.17,11.67-2.72,6.14-5.44,12.29-8.16,18.43-4.26-.9-8.6-1.53-12.93-2.17-5.22-1.38-10.32-3.11-15.19-5.45-4.33-2.08-8.11-4.52-13.04-4.72-1.23-.05-2.72.8-4.55.48-2.38-.61-3.26-.64-5.8-.81-2-.13-4.47,1.63-4.82,3.67-.61,3.47-.91,6.92-.7,10.44l3.19,25.79c2.07,7.53,5.96,15.96,14.36,17.83,9.25,2.06,18.8-4.61,26.29-9.14,9.13-5.52,17.75-11.85,25.9-18.73,2.29-1.93,1.98-4.47.51-6.24.07-.14.15-.28.21-.44,5.77-13.81,11.11-27.78,16.06-41.89,8.9.48,17.83.59,26.71.45,4.31-.07,8.62-.21,12.94-.41,9.05.45,18.11.38,27.12-.21.08,4.33.16,8.66.25,13,.13,6.63.25,13.27.38,19.9-.46.09-.92.24-1.39.47-6.83,3.39-13.9,6.14-21.24,8.2-7.06,1.98-14.19,2.58-21.32,4.05-4.86,1-9.12,4.26-8.61,9.64.52,5.46,3.93,11.85,6.42,16.66,4.67,9.03,14.95,21.86,25.7,13.65,10.15-7.74,19.87-16.16,29.65-24.43,2.24-1.12,4.68-1.79,7.26-1.94,5.49-.32,6.29-7.71,2.35-9.58-6.2-10.04-4.44-24.09-4.71-35.35-.11-4.78.59-10.65-.07-15.71,10.25-1.33,20.41-3.35,30.41-6.05,4.83-.27,9.51-1.14,13.33-3.54,53.22-15.3,109.01-45.71,122.61-103.93,3.5-15,3.49-30.58-.67-45.43ZM15.53,52.23c-1.22-.3-2.82-.53-2.91-1.18-.07-.48,2.23-2.56,2.71-3.02,2.1-2,4.65-3.45,7.26-4.65,6.04-2.78,12.71-4.33,19.06-6.22,11.73-3.49,23.47-6.98,35.2-10.47-2.09,12.27-1.73,24.83,1.05,37.13.13.58.36,1.07.62,1.5.19.67.4,1.34.62,2-21.22-4.97-42.45-9.92-63.61-15.09Z"/>
+      <circle fill="#fff" cx="127.14" cy="41.35" r="6.07"/>
+      <g>
+        <polygon points="118,-58 214,-20 118,18 22,-20" fill="#000" stroke="#fff" stroke-width="2"/>
+        <circle cx="118" cy="-20" r="5" fill="#fff"/>
+        <path d="M118 -20 C175 -16, 188 -10, 188 30" fill="none" stroke="#000" stroke-width="4"/>
+        <path d="M183 30 L193 30 L190 52 L186 52 Z" fill="#000"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <div class="safe-top"></div>
+
+  <header>
+    <div class="logo">Hon<span>q</span></div>
+    <div id="hdr-avatar" class="avatar">M</div>
+  </header>
+
+  <!-- ── Home ── -->
+  <div id="view-home" class="view active">
+    <div class="hero">
+      <div id="home-greeting" class="greeting"></div>
+      <div id="home-handle" class="handle"></div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Honks</div>
+          <div id="home-points" class="stat-value gold"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Standing</div>
+          <div id="home-rank" class="stat-value"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Badges</div>
+          <div id="home-badges" class="stat-value green"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Underway</div>
+        <span class="section-link" onclick="switchView('badges')">See all</span>
+      </div>
+      <div id="home-progress-area"></div>
+    </div>
+
+    <div class="section" style="padding-top:0">
+      <div class="section-header">
+        <div class="section-title">Leaderboard</div>
+        <span class="section-link" onclick="switchView('board')">Full board</span>
+      </div>
+      <div id="home-lb"></div>
+    </div>
+
+    <div style="padding: 8px 20px 28px; text-align: center;">
+      <span id="reset-btn" style="font-size:11px; color:var(--border); cursor:pointer; user-select:none;">
+        reset demo
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Badges ── -->
+  <div id="view-badges" class="view">
+    <div class="page-header">
+      <div class="page-title">Your Badges</div>
+      <div class="page-sub">Proof you showed up and let it change you.</div>
+    </div>
+    <div id="badge-list" class="badge-list"></div>
+  </div>
+
+  <!-- ── Scan ── -->
+  <div id="view-scan" class="view">
+    <div class="page-header">
+      <div class="page-title">Scan QR Code</div>
+      <div class="page-sub">Point your camera at the code your professor is displaying.</div>
+    </div>
+
+    <div class="camera-wrap">
+      <video id="qr-video" playsinline muted></video>
+      <canvas id="qr-canvas"></canvas>
+      <div class="aim-overlay"><div class="aim-box"></div></div>
+    </div>
+
+    <div id="cam-status" class="cam-status">Starting camera&hellip;</div>
+
+    <div id="scan-result" class="scan-result hidden">
+      <div id="result-icon" class="result-icon"></div>
+      <div class="result-label">Code detected</div>
+      <div id="result-value" class="result-value"></div>
+      <div id="result-sub" class="result-sub"></div>
+      <button id="scan-again" class="btn-secondary">Scan again</button>
+    </div>
+
+    <div class="manual-section">
+      <div class="divider-label">or enter code manually</div>
+      <div class="manual-row">
+        <input id="manual-input" type="text" placeholder="Type code here"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button id="manual-btn" class="btn-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Board ── -->
+  <div id="view-board" class="view">
+    <div class="page-header">
+      <div class="page-title">Leaderboard</div>
+      <div class="page-sub">The cohort, ranked by sheer ambition.</div>
+    </div>
+    <div id="board-list" style="padding: 0 20px 24px"></div>
+  </div>
+
+  <!-- ── Advisor ── -->
+  <div id="view-advisor" class="view">
+    <div class="page-header">
+      <div class="page-title">For Advisor Review</div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:14px; padding: 0 20px 24px;">
+      <div id="adv-crest"></div>
+      <div>
+        <div id="adv-name" class="adv-name"></div>
+        <div id="adv-identity-sub" style="font-size:12px; color:var(--review-dim)"></div>
+      </div>
+    </div>
+
+    <div class="stats-row" style="padding: 0 20px 24px;">
+      <div class="stat-card">
+        <div class="stat-label">Honks</div>
+        <div id="adv-points" class="stat-value gold"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Standing</div>
+        <div id="adv-rank" class="stat-value"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Badges</div>
+        <div id="adv-badges" class="stat-value green"></div>
+      </div>
+    </div>
+
+    <div style="padding: 0 20px 20px;">
+      <div class="section-title" style="margin-bottom:12px">Sealed this semester</div>
+      <div id="adv-earned-list"></div>
+    </div>
+
+    <div style="margin: 0 20px 20px; background: #dccbaa; border: 1px solid var(--review-accent-line); color: var(--parchment-ink); border-radius: 12px; padding: 20px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+        <span style="font-size:14px; font-weight:600; font-family: var(--serif);">Formation Reflection</span>
+        <span style="font-size:10px; font-weight:600; border:1px solid var(--seal); color:var(--seal); border-radius:4px; padding:2px 6px; letter-spacing:0.5px">AI preview</span>
+      </div>
+      <p style="font-size:14px; line-height:1.75; font-family: var(--serif); color: var(--parchment-ink);">Magnolia spent the semester between Milton and the meaning of work, which is a more coherent education than most students arrange on purpose. She earned her Nativity Ode tutorial with Dr. Larson, finished Dean Tarr's 'Full Time,' and stacked both into Semester Formation. Then she got a psychology paper accepted to a conference, as if the reading alone were insufficient. The throughline is a student who treats formation as something to do rather than attend. Next, ideally: a colloquium that argues back.</p>
+    </div>
+
+    <div style="padding: 0 20px 20px;">
+      <button id="adv-inspect-btn" class="btn-secondary">Advisor: mark inspected</button>
+      <div id="adv-inspect-caption" style="display:none; font-size:12px; color:var(--review-dim); margin-top:10px; line-height:1.5;">Your advisor records completion in the registrar's system. Honq sends and keeps nothing.</div>
+    </div>
+
+    <div style="padding: 0 20px 28px; font-size:12px; color:var(--review-dim); text-align:center;">
+      Honq is a student-held demonstration tool, not an institutional record.
+    </div>
+  </div>
+
+  <!-- ── Award overlay ── -->
+  <div id="award-overlay" class="award-overlay hidden">
+    <div id="award-modal" class="award-modal">
+      <div id="award-type" class="award-type">Sealed.</div>
+      <div id="award-icon-area" class="award-icon-area">
+        <div id="award-ring" class="award-ring"></div>
+        <div id="award-seal"></div>
+      </div>
+      <div id="award-title" class="award-title"></div>
+      <div id="award-host"  class="award-host"></div>
+      <div id="award-pts"   class="award-pts"></div>
+      <button id="award-continue" class="btn-primary" style="width:100%">Continue</button>
+    </div>
+  </div>
+
+  <div class="nav-spacer"></div>
+
+  <nav>
+    <div class="nav-item active" data-view="home">
+      <div class="nav-icon">&#8962;</div>Home
+    </div>
+    <div class="nav-item" data-view="badges">
+      <div class="nav-icon">&#9670;</div>Badges
+    </div>
+    <div class="nav-item" data-view="scan">
+      <div class="nav-icon">&#8853;</div>Scan
+    </div>
+    <div class="nav-item" data-view="board">
+      <div class="nav-icon">&#8801;</div>Board
+    </div>
+    <div class="nav-item" data-view="advisor">
+      <div class="nav-icon">&#9997;</div>Review
+    </div>
+  </nav>
+
+  <div class="safe-bottom"></div>
+
+  <script>
+  // ── State ────────────────────────────────────────────────────────────────────
+
+  const DEFAULT_STATE = {
+    student: {
+      handle:  'PuntingFowl',
+      initial: 'M',
+      name:    'Magnolia Hartwell',
+      year:    "'27",
+      points:  340,
+      earnedBadges: ['badge-larson-milton']
+    },
+    catalog: {
+      'badge-larson-milton': {
+        id: 'badge-larson-milton', title: "Milton's Nativity Ode",
+        host: 'Tutorial with Dr. Larson', points: 120,
+        qrCode: 'HONQ-LARSON-MILTON', emblem: 'goose-book', date: 'Feb 2026'
+      },
+      'badge-tarr-bahnsen': {
+        id: 'badge-tarr-bahnsen', title: 'Full Time: Work and the Meaning of Life',
+        host: 'Tutorial with Dean Tarr', points: 120,
+        qrCode: 'HONQ-TARR-BAHNSEN', emblem: 'goose-plain', date: 'Mar 2026'
+      },
+      'badge-semester-formation': {
+        id: 'badge-semester-formation', title: 'Semester Formation',
+        host: 'Honors College — Spring 2026', points: 100,
+        type: 'super', requires: ['badge-larson-milton', 'badge-tarr-bahnsen'],
+        emblem: 'goose-cap', date: 'Apr 2026'
+      },
+      'badge-research-psych': {
+        id: 'badge-research-psych', title: 'Undergraduate Research',
+        host: 'Psychology — submitted to conference', points: 400,
+        qrCode: 'HONQ-RESEARCH-PSYCH', emblem: 'goose-specs', date: 'May 2026'
+      }
+    },
+    cohort: [
+      { handle: 'DostoyevskiCardio',     points: 680 },
+      { handle: 'HobbesYourUncle',       points: 510 },
+      { handle: 'ChestertonFence',       points: 390 },
+      { handle: 'SolaFide_77',           points: 250 },
+      { handle: 'HamiltonNotTheMusical', points: 160 },
+      { handle: 'TulipOrNotTulip',       points: 100 },
+      { handle: 'the_real_aquinas',      points: 55  }
+    ]
+  };
+
+  const STORAGE_KEY = 'honq_state';
+
+  function loadState() {
+    try {
+      const s = localStorage.getItem(STORAGE_KEY);
+      return s ? JSON.parse(s) : deepClone(DEFAULT_STATE);
+    } catch (_) { return deepClone(DEFAULT_STATE); }
+  }
+
+  function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  let state = loadState();
+
+  // ── Derived helpers ──────────────────────────────────────────────────────────
+
+  function getLeaderboard() {
+    const all = [
+      ...state.cohort.map(p => ({ ...p, isYou: false })),
+      { handle: state.student.handle, points: state.student.points, isYou: true }
+    ].sort((a, b) => b.points - a.points);
+    all.forEach((p, i) => { p.rank = i + 1; });
+    return all;
+  }
+
+  function getStudentRank() { return getLeaderboard().find(p => p.isYou).rank; }
+
+  function getInProgressSupers() {
+    return Object.values(state.catalog)
+      .filter(b => b.type === 'super' && !state.student.earnedBadges.includes(b.id))
+      .map(b => {
+        const done = b.requires.filter(id => state.student.earnedBadges.includes(id)).length;
+        return done > 0 ? { ...b, earnedCount: done, totalCount: b.requires.length } : null;
+      })
+      .filter(Boolean);
+  }
+
+  function findStackUnlock() {
+    return Object.values(state.catalog).find(b =>
+      b.type === 'super' &&
+      !state.student.earnedBadges.includes(b.id) &&
+      b.requires.every(id => state.student.earnedBadges.includes(id))
+    ) || null;
+  }
+
+  function lookupQR(code) {
+    return Object.values(state.catalog).find(b => b.qrCode === code) || null;
+  }
+
+  // ── Seal markup ──────────────────────────────────────────────────────────────
+
+  function sealMarkup(emblemId, isSuper, size) {
+    size = size || 44;
+    const fill     = isSuper ? 'var(--gold)'  : 'var(--parchment)';
+    const rim      = isSuper ? 'var(--seal)'  : 'var(--gold)';
+    const inner    = Math.round(size * 0.62);
+    const rimWidth = Math.max(2, Math.round(size / 50));
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${fill};border:${rimWidth}px solid ${rim};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"><svg width="${inner}" height="${inner}" aria-hidden="true"><use href="#${emblemId}"/></svg></div>`;
+  }
+
+  // ── Rendering ────────────────────────────────────────────────────────────────
+
+  function renderHome() {
+    document.getElementById('home-greeting').textContent = 'Semester Overview for';
+    document.getElementById('home-handle').textContent = state.student.handle;
+    document.getElementById('home-points').textContent = state.student.points;
+    document.getElementById('home-rank').textContent   = '#' + getStudentRank();
+    document.getElementById('home-badges').textContent = state.student.earnedBadges.length;
+    document.getElementById('hdr-avatar').textContent  = state.student.initial;
+
+    const inProg = getInProgressSupers();
+    document.getElementById('home-progress-area').innerHTML = inProg.length
+      ? inProg.map(b => `
+          <div class="progress-card">
+            <div class="progress-title">${b.title}</div>
+            <div class="progress-sub">${b.earnedCount} of ${b.totalCount} tutorials complete</div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${Math.round(b.earnedCount/b.totalCount*100)}%"></div>
+            </div>
+          </div>`).join('')
+      : '<div style="font-size:13px;color:var(--dim)">Nothing left to earn. Go read something for fun.</div>';
+
+    const lb      = getLeaderboard();
+    const preview = lb.slice(0, 3);
+    const you     = lb.find(p => p.isYou);
+    if (you.rank > 3) preview.push(you);
+
+    document.getElementById('home-lb').innerHTML = preview.map(p => lbRow(p)).join('');
+  }
+
+  function renderBadges() {
+    const earned = state.student.earnedBadges;
+    document.getElementById('badge-list').innerHTML = Object.values(state.catalog).map(b => {
+      const isEarned    = earned.includes(b.id);
+      const isSuper     = b.type === 'super';
+      const earnedCount = isSuper ? b.requires.filter(id => earned.includes(id)).length : 0;
+      const isLocked    = !isEarned && isSuper && earnedCount === 0;
+      const statusText  = isEarned ? 'Earned' : isSuper ? 'In progress' : 'Locked';
+      const statusClass = isEarned ? 'earned' : isSuper ? 'pending' : 'locked';
+      const cardClass   = isEarned ? 'earned' : isLocked ? 'locked' : '';
+      return `
+        <div class="badge-card ${cardClass}">
+          ${sealMarkup(b.emblem, isSuper, 44)}
+          <div class="badge-info">
+            <div class="badge-title">${b.title}</div>
+            <div class="badge-host">${b.host}</div>
+            <div class="badge-pts">+${b.points} hnk</div>
+          </div>
+          <div class="badge-status ${statusClass}">${statusText}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderBoard() {
+    document.getElementById('board-list').innerHTML =
+      getLeaderboard().map(p => lbRow(p)).join('');
+  }
+
+  function renderAdvisor() {
+    document.getElementById('adv-crest').innerHTML = sealMarkup('goose-cap', true, 52);
+    document.getElementById('adv-name').textContent = state.student.name || 'Magnolia Hartwell';
+    document.getElementById('adv-identity-sub').textContent =
+      '@' + state.student.handle + ' · Honors College · ' + (state.student.year || "'27");
+
+    document.getElementById('adv-points').textContent = state.student.points;
+    document.getElementById('adv-rank').textContent   = '#' + getStudentRank();
+    document.getElementById('adv-badges').textContent = state.student.earnedBadges.length;
+
+    const earned = state.student.earnedBadges;
+    document.getElementById('adv-earned-list').innerHTML = earned.map(id => {
+      const b = state.catalog[id];
+      if (!b) return '';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--review-line);">
+        ${sealMarkup(b.emblem, b.type === 'super', 36)}
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;">${b.title}</div>
+          <div style="font-size:12px;color:var(--review-dim);">${b.host}</div>
+        </div>
+        <div style="font-size:12px;color:var(--review-dim);flex-shrink:0;">${b.date || ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function lbRow(p) {
+    return `<div class="lb-row">
+      <div class="rank ${p.isYou ? 'you' : ''}">${p.rank}</div>
+      <div class="lb-name ${p.isYou ? 'you' : ''}">${p.handle}${p.isYou ? ' &nbsp;&#9664; you' : ''}</div>
+      <div class="lb-score ${p.isYou ? 'you' : ''}">${p.points} hnk</div>
+    </div>`;
+  }
+
+  function renderAll() { renderHome(); renderBadges(); renderBoard(); renderAdvisor(); }
+
+  // ── Navigation ───────────────────────────────────────────────────────────────
+
+  document.querySelectorAll('.nav-item').forEach(item =>
+    item.addEventListener('click', () => switchView(item.dataset.view)));
+
+  function switchView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.view === name));
+    document.getElementById('view-' + name).classList.add('active');
+    if (name === 'scan') startCamera();
+    else stopCamera();
+  }
+
+  // ── Camera ───────────────────────────────────────────────────────────────────
+
+  const video     = document.getElementById('qr-video');
+  const canvas    = document.getElementById('qr-canvas');
+  const ctx       = canvas.getContext('2d', { willReadFrequently: true });
+  const camStatus = document.getElementById('cam-status');
+  const scanResult = document.getElementById('scan-result');
+
+  let camStream = null, rafId = null, scanning = false;
+
+  function startCamera() {
+    scanResult.classList.add('hidden');
+    camStatus.textContent = 'Starting camera…';
+    camStatus.classList.remove('error');
+    scanning = true;
+
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    })
+    .then(s => {
+      camStream = s;
+      video.srcObject = s;
+      video.play();
+      video.addEventListener('playing', () => {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        camStatus.textContent = 'Scanning…';
+        rafId = requestAnimationFrame(tick);
+      }, { once: true });
+    })
+    .catch(err => {
+      camStatus.textContent = 'Camera unavailable: ' + err.message;
+      camStatus.classList.add('error');
+    });
+  }
+
+  function stopCamera() {
+    scanning = false;
+    if (rafId)     { cancelAnimationFrame(rafId); rafId = null; }
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+    video.srcObject = null;
+  }
+
+  function tick() {
+    if (!scanning) return;
+    if (video.readyState >= video.HAVE_ENOUGH_DATA) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code) { handleScan(code.data); return; }
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ── Scan handler ─────────────────────────────────────────────────────────────
+
+  function handleScan(raw) {
+    stopCamera();
+    camStatus.textContent = '';
+
+    const badge = lookupQR(raw);
+
+    if (!badge) {
+      showScanInfo('&#10008;', raw, 'Unknown code.');
+      return;
+    }
+    if (state.student.earnedBadges.includes(badge.id)) {
+      showScanInfo(sealMarkup(badge.emblem, badge.type === 'super', 36), badge.title, 'You already have this badge.');
+      return;
+    }
+
+    // Award the badge then check for stacking
+    state.student.earnedBadges.push(badge.id);
+    state.student.points += badge.points;
+    saveState();
+    renderAll();
+
+    const stack = findStackUnlock();
+    showAwardModal(badge, false, stack);
+  }
+
+  function showScanInfo(iconHtml, value, sub) {
+    document.getElementById('result-icon').innerHTML   = iconHtml;
+    document.getElementById('result-value').textContent = value;
+    document.getElementById('result-sub').textContent   = sub;
+    scanResult.classList.remove('hidden');
+  }
+
+  document.getElementById('scan-again').addEventListener('click', startCamera);
+
+  // ── Manual fallback ──────────────────────────────────────────────────────────
+
+  const manualInput = document.getElementById('manual-input');
+  document.getElementById('manual-btn').addEventListener('click', () => {
+    const v = manualInput.value.trim();
+    if (v) { manualInput.value = ''; handleScan(v); }
+  });
+  manualInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('manual-btn').click();
+  });
+
+  // ── Award modal ──────────────────────────────────────────────────────────────
+
+  let pendingStack = null;
+  let stackTimeout = null;
+
+  function showAwardModal(badge, isSuper, stack) {
+    pendingStack = stack || null;
+    clearTimeout(stackTimeout);
+
+    const modal   = document.getElementById('award-modal');
+    const typeEl  = document.getElementById('award-type');
+    const sealEl  = document.getElementById('award-seal');
+    const ringEl  = document.getElementById('award-ring');
+
+    typeEl.textContent = isSuper ? 'Fully Formed' : 'Sealed.';
+    typeEl.className   = 'award-type' + (isSuper ? ' super' : '');
+    modal.className    = 'award-modal' + (isSuper ? ' super-mode' : '');
+
+    document.getElementById('award-title').textContent = badge.title;
+    document.getElementById('award-host').textContent  = badge.host;
+    document.getElementById('award-pts').textContent   = '+' + badge.points + ' hnk';
+
+    // Inject seal and run stamp animation
+    sealEl.innerHTML = sealMarkup(badge.emblem, isSuper, 150);
+    const sealDiv = sealEl.firstElementChild;
+    sealDiv.style.animation = 'none';
+    void sealDiv.offsetWidth;
+    sealDiv.style.animation = 'seal-stamp 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) forwards';
+
+    // Ring pulse
+    ringEl.style.animation = 'none';
+    void ringEl.offsetWidth;
+    ringEl.style.animation = 'ring-expand 0.55s ease-out 0.1s forwards';
+
+    // Re-trigger modal pop
+    modal.style.animation = 'none';
+    void modal.offsetWidth;
+    modal.style.animation = '';
+
+    document.getElementById('award-overlay').classList.remove('hidden');
+
+    if (pendingStack) {
+      stackTimeout = setTimeout(() => {
+        if (pendingStack) triggerStack();
+      }, 4000);
+    }
+  }
+
+  function triggerStack() {
+    const badge = pendingStack;
+    pendingStack = null;
+    clearTimeout(stackTimeout);
+
+    state.student.earnedBadges.push(badge.id);
+    state.student.points += badge.points;
+    saveState();
+    renderAll();
+
+    showAwardModal(badge, true, null);
+  }
+
+  document.getElementById('award-continue').addEventListener('click', () => {
+    if (pendingStack) { triggerStack(); return; }
+    clearTimeout(stackTimeout);
+    document.getElementById('award-overlay').classList.add('hidden');
+    camStatus.textContent = 'Scan another code below, or tap Scan again.';
+  });
+
+  // ── Advisor ──────────────────────────────────────────────────────────────────
+
+  document.getElementById('adv-inspect-btn').addEventListener('click', function() {
+    this.textContent = 'Inspected ✓';
+    this.disabled = true;
+    this.style.color = 'var(--dim)';
+    this.style.borderColor = 'var(--dim)';
+    document.getElementById('adv-inspect-caption').style.display = 'block';
+  });
+
+  // ── Reset ────────────────────────────────────────────────────────────────────
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('Reset demo to starting state?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = deepClone(DEFAULT_STATE);
+    renderAll();
+  });
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+
+  renderAll();
+  </script>
+</body>
+</html>
