@@ -2,6 +2,8 @@
 
 Honq is a web app for students in the Honors College at Regent University that tracks the co-curricular and undergraduate research requirements: colloquia, lectures, mentoring, and publications that make up the beyond-the-classroom side of an Honors education.
 
+<p align="center"> <img src="screenshots/home-view.png" alt="Honq home screen showing a student's badges, honks, and cohort standing" width="300"> </p>
+
 ## The problem
 
 Tracking these requirements is a mess in practice. At one end, programs run them out of spreadsheets, brittle rows that someone maintains by hand. At the other, they over-build: a compliance layer stacked on institutional Microsoft tools, or an elaborate Airtable base that staff can see and students cannot. Either way the student, the person the requirement actually belongs to, has no hold on it.
@@ -12,6 +14,8 @@ Honq makes the requirement the student's own: they carry it, and they are respon
 
 A student opens Honq on their phone and scans a QR code when they complete a qualifying co-curricular event. That earns a badge worth points, or "honks." Badges accumulate into credentials that mark progress through the requirements, and a leaderboard shows where a student stands relative to their cohort.
 
+<p align="center"> <img src="screenshots/badge-view.png" alt="Honq badge view showing earned badges and the credentials they build toward" width="300"> </p>
+
 Progress is reported in person: the student pulls up Honq at each required meeting with their honors advising specialist, who confirms the items against the program's requirements.
 
 ## Where AI comes in
@@ -19,6 +23,8 @@ Progress is reported in person: the student pulls up Honq at each required meeti
 AI is in Honq in two places. The first is in how it was built. I made Honq with AI coding assistance rather than a development team, which is how one person took it from idea to working prototype inside a two-week challenge.
 
 The second is in how it runs. When a student meets their honors advising specialist, the advisor view shows a short AI summary of the student's logged activity, so the specialist can see where things stand at a glance and keep the meeting on the student rather than the record. The summary does the compressing; the specialist still does the verifying.
+
+<p align="center"> <img src="screenshots/advisor-view.png" alt="Honq advisor view showing an AI summary of a student's logged activity" width="300"> </p>
 
 ## Why embodied?
 
