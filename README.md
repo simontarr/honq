@@ -40,7 +40,7 @@ Most student software treats privacy as something to manage after the fact, with
 
 ## Why the geese?
 
-Canada geese are the unofficial spirit animals of the Honors College. They're everywhere on campus, everyone has an opinion about them, and they've been a source of Honors in-jokes for years.
+Canada geese are the unofficial spirit animals of the Honors College. They're everywhere on campus, everyone has an opinion about them, and they've been a source of Honors in-jokes for years. The goose you see throughout Honq is hand-drawn by the author, rendered as SVG in the code of the app.
 
 ## Running it
 
