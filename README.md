@@ -38,7 +38,9 @@ Canada geese are the unofficial spirit animals of the Honors College. They're ev
 
 ## Running it
 
-Honq is hosted on GitHub Pages at https://simontarr.github.io/honq/. Open it in a browser, ideally on a phone since that's where the scanning happens, and add it to your phone's home screen for the full app experience. The source is in this repository, readable without downloading anything, and the demo is self-contained, with seeded data, so it runs without an account or a backend. A short video walkthrough is linked from the Devpost submission.
+Honq is hosted on GitHub Pages at [https://simontarr.github.io/honq/](https://simontarr.github.io/honq/). Open it in a browser, ideally on a phone since that's where the scanning happens, and add it to your phone's home screen for the full app experience. The source is in this repository, readable without downloading anything, and the demo is self-contained, with seeded data, so it runs without an account or a backend. A short video walkthrough is linked from the Devpost submission.
+
+If you'd rather see a walkthrough, the demo video is on [YouTube](https://youtu.be/4p3fQ7krgGc).
 
 ## Status
 
